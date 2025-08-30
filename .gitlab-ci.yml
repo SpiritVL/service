@@ -18,7 +18,6 @@ coverage:
   image: webdevops/php-dev:8.4-alpine
   stage: coverage
   before_script:
-    - cd app
     - cp .env.test .env
     - composer install --prefer-dist --no-progress --no-interaction
   script:
