@@ -5,4 +5,4 @@
 ## Установка
 
 * `make init` - первичная инициализация проекта
-* `make test` - запуск тестов с покрытием (доступен code coverage report `/report/index.html`)
+* `make test` - запуск тестов с покрытием (доступен code coverage report `/coverage/index.html`)
