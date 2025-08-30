@@ -1,0 +1,59 @@
+version: '3.3'
+services:
+  nginx:
+    image: 'webdevops/nginx'
+    container_name: service-nginx
+    working_dir: /app
+    environment:
+      WEB_DOCUMENT_ROOT: /app/public
+      WEB_DOCUMENT_INDEX: index.php
+      WEB_PHP_SOCKET: php-fpm:9000
+    volumes:
+      - ./:/app
+    ports:
+      - '${DOCKER_WEB_PORT:-8080}:80'
+
+  php-fpm:
+    image: 'webdevops/php-dev:8.4-alpine'
+    container_name: service-php-fpm
+    working_dir: /app
+    environment:
+      PHP_POST_MAX_SIZE: 100M
+      PHP_UPLOAD_MAX_FILESIZE: 100M
+      PHP_MEMORY_LIMIT: 512M
+      PHP_DATE_TIMEZONE: Europe/Moscow
+      XDEBUG_MODE: coverage
+    volumes:
+      - ./:/app
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: service-postgres
+    environment:
+      POSTGRES_USER: service
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: service
+      PGDATA: /data/postgres
+    volumes:
+      - postgres_data:/data/postgres
+    ports:
+      - "${DOCKER_POSTGRES_PORT:-5432}:5432"
+
+  redis:
+    image: redis:alpine
+    container_name: service-redis
+    volumes:
+      - redis_data:/data
+
+  rabbitmq:
+    container_name: service-rabbitmq
+    image: rabbitmq:3.13.7-management-alpine
+    ports:
+      - "${DOCKER_RABBITMQ_PORT:-15672}:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+volumes:
+  postgres_data:
+  redis_data:
+  rabbitmq_data:
