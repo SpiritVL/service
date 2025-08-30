@@ -9,12 +9,15 @@
         "ext-iconv": "*",
         "symfony/console": "7.3.*",
         "symfony/dotenv": "7.3.*",
-        "symfony/flex": "^2",
+        "symfony/flex": "^2.8.2",
         "symfony/framework-bundle": "7.3.*",
         "symfony/runtime": "7.3.*",
         "symfony/yaml": "7.3.*"
     },
     "require-dev": {
+        "phpunit/phpunit": "^12.3.7",
+        "symfony/browser-kit": "7.3.*",
+        "symfony/css-selector": "7.3.*",
         "symfony/stopwatch": "7.3.*",
         "symfony/web-profiler-bundle": "7.3.*"
     },
