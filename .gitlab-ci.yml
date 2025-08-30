@@ -1,0 +1,31 @@
+stages:
+    - coverage
+
+variables:
+  COMPOSER_CACHE_DIR: "$CI_PROJECT_DIR/.composer/cache"
+  PHP_POST_MAX_SIZE: 100M
+  PHP_UPLOAD_MAX_FILESIZE: 100M
+  PHP_MEMORY_LIMIT: 512M
+  PHP_DATE_TIMEZONE: Europe/Moscow
+  XDEBUG_MODE: coverage
+
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - app/vendor/
+
+coverage:
+  image: webdevops/php-dev:8.4-alpine
+  stage: coverage
+  before_script:
+    - cd app
+    - cp .env.test .env
+    - composer install --prefer-dist --no-progress --no-interaction
+  script:
+    - vendor/bin/phpunit --coverage-text --coverage-clover coverage.xml --colors=never
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: app/coverage.xml
+  coverage: '/Lines:\s+\d+\.\d+\s?%|Lines:\s+\d+\s+%/'
