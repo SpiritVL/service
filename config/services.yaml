@@ -25,10 +25,15 @@ services:
                 connect_timeout: 30
                 verify: false
 
-    app.csv.string:
+    common.csv.stringReader:
         class: App\Modules\Common\Csv\StringCsvReader
-    app.csv.nameUrl:
+    common.csv.nameUrlReader:
         class: App\Modules\Files\NameUrlCsvReader
 
-    App\Modules\Common\Csv\CsvReaderInterface $stringCsvReader: '@app.csv.string'
-    App\Modules\Common\Csv\CsvReaderInterface $nameUrlCsvReader: '@app.csv.nameUrl'
+    App\Modules\Common\Csv\CsvReaderInterface $stringCsvReader: '@common.csv.stringReader'
+    App\Modules\Common\Csv\CsvReaderInterface $nameUrlCsvReader: '@common.csv.nameUrlReader'
+
+    # Исключаем сервисы, которые должны создаваться вручную
+    App\Modules\Files\Subscribers\DownloadProgressSubscriber:
+        autowire: false
+        autoconfigure: false
