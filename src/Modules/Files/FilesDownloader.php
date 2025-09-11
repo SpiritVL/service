@@ -3,35 +3,52 @@
 namespace App\Modules\Files;
 
 use App\Modules\Files\Dto\NameUrlDto;
-use GuzzleHttp\Exception\GuzzleException;
+use App\Modules\Files\Events\DownloadErrorEvent;
+use App\Modules\Files\Events\DownloadSuccessEvent;
 use Iterator;
 use GuzzleHttp\Client;
+use Psr\EventDispatcher\EventDispatcherInterface;
+use Throwable;
 
 readonly class FilesDownloader
 {
-    public function __construct(private Client $client)
+    public function __construct(
+        private Client $client,
+        private EventDispatcherInterface $eventDispatcher
+    )
     {
     }
 
     /**
      * @param Iterator<NameUrlDto> $list
      * @param string $folder
-     * @param callable $afterDownload
      *
      * @return void
-     * @throws GuzzleException
      */
-    public function downloadFiles(Iterator $list, string $folder, callable $afterDownload): void
+    public function downloadFiles(Iterator $list, string $folder): void
     {
         /** @var NameUrlDto $dto */
         foreach ($list as $dto) {
-            $this->client->get($dto->url, [
-                'sink' => sprintf('%s/%s.pdf', $folder, $dto->name),
-            ]);
+            try {
+                $this->client->get($dto->url, [
+                    'sink' => sprintf('%s/%s.pdf', $folder, $dto->name),
+                ]);
 
-            // Ждем какое-то время, чтобы не заблокировали
-            usleep(mt_rand(10, 200) * 1000);
-            $afterDownload();
+                // Ждем какое-то время, чтобы не заблокировали
+                usleep(mt_rand(10, 500) * 1000);
+
+                // Уведомляем об успехе
+                $this->eventDispatcher->dispatch(new DownloadSuccessEvent(
+                    $dto->name, $dto->url
+                ));
+            } catch (Throwable $exception) {
+                // Уведомляем об ошибке
+                $this->eventDispatcher->dispatch(new DownloadErrorEvent(
+                    $dto->name, $dto->url, $exception->getMessage()
+                ));
+
+                continue;
+            }
         }
     }
 }
