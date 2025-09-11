@@ -18,3 +18,17 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+    GuzzleHttp\Client:
+        arguments:
+            - config:
+                timeout: 300
+                connect_timeout: 30
+                verify: false
+
+    app.csv.string:
+        class: App\Modules\Common\Csv\StringCsvReader
+    app.csv.nameUrl:
+        class: App\Modules\Files\NameUrlCsvReader
+
+    App\Modules\Common\Csv\CsvReaderInterface $stringCsvReader: '@app.csv.string'
+    App\Modules\Common\Csv\CsvReaderInterface $nameUrlCsvReader: '@app.csv.nameUrl'
