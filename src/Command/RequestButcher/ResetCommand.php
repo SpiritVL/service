@@ -1,0 +1,45 @@
+<?php
+
+namespace App\Command\RequestButcher;
+
+use App\Entity\RequestButcher\Task;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Style\SymfonyStyle;
+
+#[AsCommand(
+    name: 'rb:reset',
+    description: 'Сброс всех ошибочных статусов',
+)]
+class ResetCommand extends Command
+{
+    public function __construct(
+        private readonly EntityManagerInterface $entityManager,
+    ) {
+        parent::__construct();
+    }
+
+    protected function execute(InputInterface $input, OutputInterface $output): int
+    {
+        $io = new SymfonyStyle($input, $output);
+
+        $queryBuilder = $this->entityManager->createQueryBuilder();
+        $query = $queryBuilder
+            ->update(Task::class, 't')
+            ->set('t.status', ':new')
+            ->setParameter('new', 'new')
+            ->where($queryBuilder->expr()->notIn('t.status', ['new', 'done']))
+            ->getQuery();
+
+        $affectedRows = $query->execute();
+
+        $io->success(
+            sprintf('Сброс завершен. Затронуто [%d] записей', $affectedRows)
+        );
+
+        return Command::SUCCESS;
+    }
+}
