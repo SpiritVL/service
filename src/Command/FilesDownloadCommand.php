@@ -38,14 +38,13 @@ class FilesDownloadCommand extends Command
     protected function configure(): void
     {
         $this
-            ->setDescription('Скачивает файлы из CSV файла, переименовывает их и складывает в папку')
             ->addArgument('csv', InputArgument::REQUIRED, 'Путь до CSV файла');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
-        $pathToCsv = $input->getArgument('csv');
+        $pathToCsv = 'var/files/' . $input->getArgument('csv');
 
         try {
             // Пробуем получить строки
