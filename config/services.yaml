@@ -4,6 +4,8 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
+    rb.url: '%env(RB_URL)%'
+    rb.session: '%env(RB_SESSION)%'
 
 services:
     # default configuration for services in *this* file
@@ -25,13 +27,21 @@ services:
                 connect_timeout: 30
                 verify: false
 
-    common.csv.stringReader:
-        class: App\Modules\Common\Csv\StringCsvReader
-    common.csv.nameUrlReader:
-        class: App\Modules\Files\NameUrlCsvReader
+    App\Command\RequestButcher\RunCommand:
+        arguments:
+            $url: '%rb.url%'
+            $session: '%rb.session%'
 
-    App\Modules\Common\Csv\CsvReaderInterface $stringCsvReader: '@common.csv.stringReader'
-    App\Modules\Common\Csv\CsvReaderInterface $nameUrlCsvReader: '@common.csv.nameUrlReader'
+    csv.stringReader:
+        class: App\Modules\Common\Csv\StringCsvReader
+    csv.nameUrlReader:
+        class: App\Modules\Files\NameUrlCsvReader
+    csv.idTypeReader:
+        class: App\Modules\RequestButcher\IdTypeCsvReader
+
+    App\Modules\Common\Csv\CsvReaderInterface $stringCsvReader: '@csv.stringReader'
+    App\Modules\Common\Csv\CsvReaderInterface $nameUrlCsvReader: '@csv.nameUrlReader'
+    App\Modules\Common\Csv\CsvReaderInterface $idTypeCsvReader: '@csv.idTypeReader'
 
     # Исключаем сервисы, которые должны создаваться вручную
     App\Modules\Files\Subscribers\DownloadProgressSubscriber:
