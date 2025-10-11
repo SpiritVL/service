@@ -18,11 +18,24 @@ services:
     container_name: service-php-fpm
     working_dir: /app
     environment:
-      PHP_POST_MAX_SIZE: 100M
-      PHP_UPLOAD_MAX_FILESIZE: 100M
-      PHP_MEMORY_LIMIT: 512M
+      PHP_POST_MAX_SIZE: 256M
+      PHP_UPLOAD_MAX_FILESIZE: 256M
+      PHP_MEMORY_LIMIT: 1024M
       PHP_DATE_TIMEZONE: Europe/Moscow
       XDEBUG_MODE: coverage
+    volumes:
+      - ./:/app
+
+  php-fpm-prod:
+    image: 'webdevops/php:8.4-alpine'
+    container_name: service-php-fpm-prod
+    working_dir: /app
+    environment:
+      PHP_POST_MAX_SIZE: 256M
+      PHP_UPLOAD_MAX_FILESIZE: 256M
+      PHP_MEMORY_LIMIT: 1024M
+      PHP_DATE_TIMEZONE: Europe/Moscow
+      APP_ENV: prod
     volumes:
       - ./:/app
 
