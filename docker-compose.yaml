@@ -1,125 +1,124 @@
 version: '3.3'
 services:
-  nginx:
-    image: 'webdevops/nginx'
-    container_name: service-nginx
-    working_dir: /app
-    environment:
-      WEB_DOCUMENT_ROOT: /app/public
-      WEB_DOCUMENT_INDEX: index.php
-      WEB_PHP_SOCKET: php-fpm:9000
-    volumes:
-      - ./:/app
-    ports:
-      - '${DOCKER_WEB_PORT:-8080}:80'
+    application:
+        image: 'webdevops/nginx'
+        working_dir: /app
+        environment:
+            WEB_DOCUMENT_ROOT: /app/public
+            WEB_DOCUMENT_INDEX: index.php
+            WEB_PHP_SOCKET: php-fpm:9000
+        volumes:
+        - ./:/app
+        ports:
+        - '${DOCKER_WEB_PORT:-8080}:80'
 
-  php-fpm:
-    image: 'webdevops/php-dev:8.4-alpine'
-    container_name: service-php-fpm
-    working_dir: /app
-    environment:
-      PHP_POST_MAX_SIZE: 256M
-      PHP_UPLOAD_MAX_FILESIZE: 256M
-      PHP_MEMORY_LIMIT: 1024M
-      PHP_DATE_TIMEZONE: Europe/Moscow
-      XDEBUG_MODE: coverage
-    volumes:
-      - ./:/app
+    php-fpm:
+        image: 'webdevops/php-dev:8.4-alpine'
+        working_dir: /app
+        environment:
+            PHP_POST_MAX_SIZE: 256M
+            PHP_UPLOAD_MAX_FILESIZE: 256M
+            PHP_MEMORY_LIMIT: 1024M
+            PHP_DATE_TIMEZONE: Europe/Moscow
+            XDEBUG_MODE: coverage
+        volumes:
+        - ./:/app
 
-  php-fpm-prod:
-    image: 'webdevops/php:8.4-alpine'
-    container_name: service-php-fpm-prod
-    working_dir: /app
-    environment:
-      PHP_POST_MAX_SIZE: 256M
-      PHP_UPLOAD_MAX_FILESIZE: 256M
-      PHP_MEMORY_LIMIT: 1024M
-      PHP_DATE_TIMEZONE: Europe/Moscow
-      APP_ENV: prod
-    volumes:
-      - ./:/app
+    php-fpm-prod:
+        image: 'webdevops/php:8.4-alpine'
+        working_dir: /app
+        environment:
+            PHP_POST_MAX_SIZE: 256M
+            PHP_UPLOAD_MAX_FILESIZE: 256M
+            PHP_MEMORY_LIMIT: 1024M
+            PHP_DATE_TIMEZONE: Europe/Moscow
+        volumes:
+        - ./:/app
 
-  postgres:
-    image: postgres:17.6-alpine
-    container_name: service-postgres
-    environment:
-      POSTGRES_USER: service
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: service
-      PGDATA: /data/postgres
-    volumes:
-      - postgres_17_data:/data/postgres
-    ports:
-      - "${DOCKER_POSTGRES_PORT:-5432}:5432"
+    postgres:
+        image: postgres:17.6-alpine
+        environment:
+            POSTGRES_USER: service
+            POSTGRES_PASSWORD: password
+            POSTGRES_DB: service
+            PGDATA: /data/postgres
+        volumes:
+        - postgres_17_data:/data/postgres
+        ports:
+        - "${DOCKER_POSTGRES_PORT:-5432}:5432"
 
-  redis:
-    image: redis:alpine
-    container_name: service-redis
-    volumes:
-      - redis_data:/data
+    redis:
+        image: redis:alpine
+        volumes:
+        - redis_data:/data
 
-  rabbitmq:
-    container_name: service-rabbitmq
-    image: rabbitmq:3.13.7-management-alpine
-    ports:
-      - "${DOCKER_RABBITMQ_PORT:-15672}:15672"
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
+    rabbitmq:
+        image: rabbitmq:3.13.7-management-alpine
+        ports:
+        - "${DOCKER_RABBITMQ_PORT:-15672}:15672"
+        volumes:
+        - rabbitmq_data:/var/lib/rabbitmq
 
-  webhook:
-    container_name: webhook-site
-    image: "webhooksite/webhook.site"
-    command: php artisan queue:work --daemon --tries=3 --timeout=10
-    ports:
-      - "8084:80"
-    environment:
-      - APP_ENV=dev
-      - APP_DEBUG=true
-      - APP_URL=http://localhost:8084
-      - APP_LOG=errorlog
-      - DB_CONNECTION=sqlite
-      - REDIS_HOST=redis
-      - BROADCAST_DRIVER=redis
-      - CACHE_DRIVER=redis
-      - QUEUE_DRIVER=redis
-      - ECHO_HOST_MODE=path
-    depends_on:
-      - redis
+    webhook:
+        image: "webhooksite/webhook.site"
+        command: php artisan queue:work --daemon --tries=3 --timeout=10
+        ports:
+        - "8084:80"
+        environment:
+        - APP_ENV=dev
+        - APP_DEBUG=true
+        - APP_URL=http://localhost:8084
+        - APP_LOG=errorlog
+        - DB_CONNECTION=sqlite
+        - REDIS_HOST=redis
+        - BROADCAST_DRIVER=redis
+        - CACHE_DRIVER=redis
+        - QUEUE_DRIVER=redis
+        - ECHO_HOST_MODE=path
+        depends_on:
+        - redis
 
-  laravel-echo-server:
-    container_name: laravel-echo-server
-    image: "webhooksite/laravel-echo-server"
-    command:
-      - exec
-      - laravel-echo-server
-      - start
-      - --force
-    environment:
-      - LARAVEL_ECHO_SERVER_AUTH_HOST=http://webhook
-      - LARAVEL_ECHO_SERVER_HOST=0.0.0.0
-      - LARAVEL_ECHO_SERVER_PORT=6001
-      - ECHO_REDIS_PORT=6379
-      - ECHO_REDIS_HOSTNAME=redis
-      - ECHO_PROTOCOL=http
-      - ECHO_ALLOW_CORS=true
-      - ECHO_ALLOW_ORIGIN=*
-      - ECHO_ALLOW_METHODS=*
-      - ECHO_ALLOW_HEADERS=*
+    laravel-echo-server:
+        image: "webhooksite/laravel-echo-server"
+        command:
+        - exec
+        - laravel-echo-server
+        - start
+        - --force
+        environment:
+        - LARAVEL_ECHO_SERVER_AUTH_HOST=http://webhook
+        - LARAVEL_ECHO_SERVER_HOST=0.0.0.0
+        - LARAVEL_ECHO_SERVER_PORT=6001
+        - ECHO_REDIS_PORT=6379
+        - ECHO_REDIS_HOSTNAME=redis
+        - ECHO_PROTOCOL=http
+        - ECHO_ALLOW_CORS=true
+        - ECHO_ALLOW_ORIGIN=*
+        - ECHO_ALLOW_METHODS=*
+        - ECHO_ALLOW_HEADERS=*
 
-  grafana:
-    image: grafana/grafana:latest
-    container_name: service-grafana
-    ports:
-      - "${DOCKER_RABBITMQ_PORT:-3000}:3000"
-    volumes:
-      - grafana_data:/var/lib/grafana
-    environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=password
-      - GF_USERS_ALLOW_SIGN_UP=false
+    grafana:
+        image: grafana/grafana:latest
+        ports:
+        - "${DOCKER_RABBITMQ_PORT:-3000}:3000"
+        volumes:
+        - grafana_data:/var/lib/grafana
+        environment:
+        - GF_SECURITY_ADMIN_USER=admin
+        - GF_SECURITY_ADMIN_PASSWORD=password
+        - GF_USERS_ALLOW_SIGN_UP=false
+
+    prometheus:
+        image: prom/prometheus
+        ports:
+        - "${DOCKER_PROMETHEUS_PORT:-9090}:9090"
+        volumes:
+        - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+        - prometheus_data:/prometheus
 
 volumes:
-  postgres_17_data:
-  redis_data:
-  rabbitmq_data:
-  grafana_data:
+    postgres_17_data:
+    redis_data:
+    rabbitmq_data:
+    grafana_data:
+    prometheus_data:

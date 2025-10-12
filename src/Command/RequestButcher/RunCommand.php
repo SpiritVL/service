@@ -3,14 +3,13 @@
 namespace App\Command\RequestButcher;
 
 use App\Entity\RequestButcher\Task;
+use App\Modules\RequestButcher\Metrics\RunWithTimerCollector;
 use App\Repository\RequestButcher\TaskRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use GuzzleHttp\Client;
 use GuzzleHttp\Cookie\CookieJar;
-use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Promise\Utils;
 use GuzzleHttp\Psr7\Response;
-use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Question\Question;
@@ -33,7 +32,7 @@ class RunCommand extends Command
         private readonly TaskRepository $repository,
         private readonly EntityManagerInterface $entityManager,
         private readonly Client $client,
-        private readonly LoggerInterface $logger
+        private readonly RunWithTimerCollector $collector
     ) {
         parent::__construct();
     }
@@ -68,10 +67,10 @@ class RunCommand extends Command
 
         foreach (array_chunk($tasks, $threads) as $chunk) {
             $promises = [];
-            $start = microtime(true);
 
             /** @var Task $task */
             foreach ($chunk as $task) {
+                $this->collector->start((string) $task->getId());
                 $task->setStatus('pending');
                 $this->entityManager->flush();
 
@@ -79,30 +78,37 @@ class RunCommand extends Command
                 $promise = $this->client->postAsync(
                     $this->url,
                     [
+                        'http_errors' => false,
                         'form_params' => $task->getRequestBody(),
                         'cookies' => $jar
                     ]
                 );
                 $promise->then(
                     function (Response $response) use ($task, &$success) {
+                        $this->collector->stop((string) $task->getId());
                         try {
                             $json = json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
 
                             if ($json['status'] === 'success') {
                                 $success++;
                                 $task->setStatus('done');
+                                $this->collector->incDone($task->getSession(), $task, true);
                             } else {
                                 $task->setStatus('error');
                                 $task->setLastError($json['message']);
+                                $this->collector->incDone($task->getSession(), $task, false);
                             }
-                        } catch (\JsonException $exception) {
+                        } catch (\Throwable $throwable) {
                             $task->setStatus('error');
                             $task->setLastError('Wrong response');
+                            $this->collector->incDone($task->getSession(), $task, false);
                         }
                     },
-                    function (ConnectException $e) use ($task) {
+                    function (\Throwable $e) use ($task) {
+                        $this->collector->stop((string) $task->getId());
                         $task->setStatus('error');
                         $task->setLastError($e->getMessage());
+                        $this->collector->incDone($task->getSession(), $task, false);
                     }
                 );
                 $promises[] = $promise;
@@ -111,7 +117,6 @@ class RunCommand extends Command
             Utils::settle($promises)->wait();
 
             $this->entityManager->flush();
-            $this->logger->debug(sprintf('TIME SPEND: %s sec.', (microtime(true) - $start) * 1000));
             $progressBar->advance();
         }
 
