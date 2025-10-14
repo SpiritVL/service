@@ -4,7 +4,7 @@ namespace App\Modules\RequestButcher\Dto;
 
 use League\Csv\Serializer\MapCell;
 
-final readonly class IdTypeDto
+final readonly class BasicDto
 {
     public function __construct(
         #[MapCell("loanId")]

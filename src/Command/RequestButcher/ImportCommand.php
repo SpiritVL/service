@@ -6,7 +6,7 @@ use App\Entity\RequestButcher\Factory\SessionFactory;
 use App\Entity\RequestButcher\Factory\TaskFactory;
 use App\Modules\Common\Csv\CsvReaderInterface;
 use App\Modules\Common\Csv\Exception\WrongRowFormatException;
-use App\Modules\RequestButcher\Dto\IdTypeDto;
+use App\Modules\RequestButcher\Dto\BasicDto;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Question\Question;
@@ -25,7 +25,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 class ImportCommand extends Command
 {
     public function __construct(
-        private readonly CsvReaderInterface $idTypeCsvReader,
+        private readonly CsvReaderInterface $requestButchCsvReader,
         private readonly EntityManagerInterface $entityManager,
         private readonly SessionFactory $sessionFactory,
         private readonly TaskFactory $taskFactory
@@ -47,7 +47,7 @@ class ImportCommand extends Command
 
         try {
             // Пробуем получить строки
-            $rows = $this->idTypeCsvReader->read('var/butcher/' . $pathToCsv);
+            $rows = $this->requestButchCsvReader->read('var/butcher/' . $pathToCsv);
         } catch (WrongRowFormatException|FileNotFoundException $e) {
             $io->error($e->getMessage());
 
@@ -74,7 +74,7 @@ class ImportCommand extends Command
         $this->entityManager->persist($session);
         $this->entityManager->flush();
 
-        /** @var IdTypeDto $dto */
+        /** @var BasicDto $dto */
         foreach ($rows as $index => $dto) {
             // Создаем задание
             $task = $this->taskFactory->create(

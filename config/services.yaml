@@ -36,12 +36,12 @@ services:
         class: App\Modules\Common\Csv\StringCsvReader
     csv.nameUrlReader:
         class: App\Modules\Files\NameUrlCsvReader
-    csv.idTypeReader:
-        class: App\Modules\RequestButcher\IdTypeCsvReader
+    csv.requestBatchReader:
+        class: App\Modules\RequestButcher\RequestBatchCsvReader
 
     App\Modules\Common\Csv\CsvReaderInterface $stringCsvReader: '@csv.stringReader'
     App\Modules\Common\Csv\CsvReaderInterface $nameUrlCsvReader: '@csv.nameUrlReader'
-    App\Modules\Common\Csv\CsvReaderInterface $idTypeCsvReader: '@csv.idTypeReader'
+    App\Modules\Common\Csv\CsvReaderInterface $requestButchCsvReader: '@csv.requestBatchReader'
 
     # Исключаем сервисы, которые должны создаваться вручную
     App\Modules\Files\Subscribers\DownloadProgressSubscriber:
