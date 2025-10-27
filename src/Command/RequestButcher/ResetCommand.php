@@ -7,6 +7,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
@@ -22,19 +23,31 @@ class ResetCommand extends Command
         parent::__construct();
     }
 
+    protected function configure(): void
+    {
+        $this
+            ->addOption('session', 's', InputOption::VALUE_OPTIONAL, 'ID сессии');
+    }
+
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
+        $sessionId = $input->getOption('session');
 
         $queryBuilder = $this->entityManager->createQueryBuilder();
-        $query = $queryBuilder
+        $queryBuilder
             ->update(Task::class, 't')
             ->set('t.status', ':new')
             ->setParameter('new', 'new')
-            ->where($queryBuilder->expr()->notIn('t.status', ['new', 'done']))
-            ->getQuery();
+            ->where($queryBuilder->expr()->notIn('t.status', ['new', 'done']));
 
-        $affectedRows = $query->execute();
+        if ($sessionId) {
+            $queryBuilder
+                ->andWhere('t.session = :sessionId')
+                ->setParameter('sessionId', $sessionId);
+        }
+
+        $affectedRows = $queryBuilder->getQuery()->execute();
 
         $io->success(
             sprintf('Сброс завершен. Затронуто [%d] записей', $affectedRows)
