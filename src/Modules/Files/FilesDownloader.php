@@ -2,6 +2,7 @@
 
 namespace App\Modules\Files;
 
+use App\Modules\Common\Files\FileNamer;
 use App\Modules\Files\Dto\NameUrlDto;
 use App\Modules\Files\Events\DownloadErrorEvent;
 use App\Modules\Files\Events\DownloadSuccessEvent;
@@ -14,7 +15,8 @@ readonly class FilesDownloader
 {
     public function __construct(
         private Client $client,
-        private EventDispatcherInterface $eventDispatcher
+        private EventDispatcherInterface $eventDispatcher,
+        private FileNamer $fileNamer
     )
     {
     }
@@ -31,7 +33,7 @@ readonly class FilesDownloader
         foreach ($list as $dto) {
             try {
                 $this->client->get($dto->url, [
-                    'sink' => sprintf('%s/%s.pdf', $folder, $dto->name),
+                    'sink' => $this->fileNamer->getUniqueName($folder, $dto->name),
                 ]);
 
                 // Ждем какое-то время, чтобы не заблокировали
