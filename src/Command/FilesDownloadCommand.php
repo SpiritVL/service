@@ -38,13 +38,15 @@ class FilesDownloadCommand extends Command
     protected function configure(): void
     {
         $this
-            ->addArgument('csv', InputArgument::REQUIRED, 'Путь до CSV файла');
+            ->addArgument('csv', InputArgument::REQUIRED, 'Путь до CSV файла')
+            ->addOption('replace', 'r', InputOption::VALUE_NONE, 'Перезапись одноименных файлов');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
         $pathToCsv = 'var/files/' . $input->getArgument('csv');
+        $isReplace = $input->getOption('replace');
 
         try {
             // Пробуем получить строки
@@ -74,7 +76,7 @@ class FilesDownloadCommand extends Command
 
         // Начало обработки
         $progressBar->start();
-        $this->downloader->downloadFiles($rows, $outputDir);
+        $this->downloader->downloadFiles($rows, $outputDir, $isReplace);
         $progressBar->finish();
         // Конец обработки
 

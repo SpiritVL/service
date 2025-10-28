@@ -27,13 +27,13 @@ readonly class FilesDownloader
      *
      * @return void
      */
-    public function downloadFiles(Iterator $list, string $folder): void
+    public function downloadFiles(Iterator $list, string $folder, bool $isReplace): void
     {
         /** @var NameUrlDto $dto */
         foreach ($list as $dto) {
             try {
                 $this->client->get($dto->url, [
-                    'sink' => $this->fileNamer->getUniqueName($folder, $dto->name),
+                    'sink' => $this->fileNamer->getName($folder, $dto->name, $isReplace),
                 ]);
 
                 // Ждем какое-то время, чтобы не заблокировали

@@ -14,6 +14,18 @@ readonly class FileNamer
     /**
      * @throws Exception
      */
+    public function getName(string $directory, string $filename, bool $isReplace): string
+    {
+        if ($isReplace) {
+            return $this->getNotUniqueName($directory, $filename);
+        }
+
+        return $this->getUniqueName($directory, $filename);
+    }
+
+    /**
+     * @throws Exception
+     */
     public function getUniqueName(string $directory, string $filename): string
     {
         $filepath = sprintf('%s/%s.pdf', $directory, $filename);
@@ -35,5 +47,10 @@ readonly class FileNamer
         throw new Exception(
             sprintf('Cannot generate unique filename for: `%s`', $filepath)
         );
+    }
+
+    public function getNotUniqueName(string $directory, string $filename): string
+    {
+        return sprintf('%s/%s.pdf', $directory, $filename);
     }
 }
