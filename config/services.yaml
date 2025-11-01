@@ -31,6 +31,9 @@ services:
         arguments:
             $url: '%rb.url%'
             $session: '%rb.session%'
+    App\Command\Files\DownloadCommand:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
 
     csv.stringReader:
         class: App\Modules\Common\Csv\StringCsvReader

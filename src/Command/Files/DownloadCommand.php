@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Command;
+namespace App\Command\Files;
 
 use App\Modules\Common\Csv\CsvReaderInterface;
 use App\Modules\Common\Csv\CsvWriterFactory;
@@ -8,25 +8,29 @@ use App\Modules\Common\Csv\Exception\WrongRowFormatException;
 use App\Modules\Files\Events\DownloadErrorEvent;
 use App\Modules\Files\FilesDownloader;
 use App\Modules\Files\Subscribers\DownloadProgressSubscriber;
-use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use SplFileInfo;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\ProgressBar;
-use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Question\ChoiceQuestion;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Filesystem\Exception\FileNotFoundException;
 use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\Finder\Finder;
 
 #[AsCommand(
     name: 'files:download',
     description: 'Скачивает файлы. Нужен csv файл, в котором 2 колонки: новое имя файла, полный путь до файла',
 )]
-class FilesDownloadCommand extends Command
+class DownloadCommand extends Command
 {
     public function __construct(
+        private readonly string $projectDir,
         private readonly Filesystem $filesystem,
         private readonly CsvReaderInterface $nameUrlCsvReader,
         private readonly CsvWriterFactory $writerFactory,
@@ -39,15 +43,34 @@ class FilesDownloadCommand extends Command
     protected function configure(): void
     {
         $this
-            ->addArgument('csv', InputArgument::REQUIRED, 'Путь до CSV файла')
             ->addOption('replace', 'r', InputOption::VALUE_NONE, 'Перезапись одноименных файлов');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
-        $pathToCsv = 'var/files/' . $input->getArgument('csv');
+
         $isReplace = $input->getOption('replace');
+        if ($isReplace) {
+            $output->writeln([
+                '',
+                'Режим: <error> Rewrite </error>',
+                '<info>Включен режим перезаписи файлов с одинаковыми именами.</info>',
+                ''
+            ]);
+        } else {
+            $output->writeln([
+                '',
+                'Режим: <error> Copy </error>',
+                '<info>Режим копий файлов, будут создаваться `_1`, `_2`, ...</info>',
+                ''
+            ]);
+        }
+
+        $helper = new QuestionHelper();
+        $question = new ChoiceQuestion('Выберите csv-файл для загрузки', $this->getFiles());
+        $question->setErrorMessage('Файл %s не существует.');
+        $pathToCsv = $this->projectDir . '/var/files/' . $helper->ask($input, $output, $question);
 
         try {
             // Пробуем получить строки
@@ -121,5 +144,22 @@ class FilesDownloadCommand extends Command
         }
 
         return Command::SUCCESS;
+    }
+
+    private function getFiles(): array
+    {
+        $results = (new Finder())
+            ->files()
+            ->in($this->projectDir . '/var/files/')
+            ->filter(fn ($file) => $file->getExtension() === 'csv');
+
+        $files = [];
+
+        /** @var SplFileInfo $file */
+        foreach ($results as $file) {
+            $files[] = $file->getRelativePathname();
+        }
+
+        return $files;
     }
 }
