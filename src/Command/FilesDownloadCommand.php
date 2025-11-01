@@ -8,6 +8,7 @@ use App\Modules\Common\Csv\Exception\WrongRowFormatException;
 use App\Modules\Files\Events\DownloadErrorEvent;
 use App\Modules\Files\FilesDownloader;
 use App\Modules\Files\Subscribers\DownloadProgressSubscriber;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
