@@ -27,10 +27,15 @@ services:
                 connect_timeout: 30
                 verify: false
 
+    App\Command\RequestButcher\ImportCommand:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+
     App\Command\RequestButcher\RunCommand:
         arguments:
             $url: '%rb.url%'
             $session: '%rb.session%'
+
     App\Command\Files\DownloadCommand:
         arguments:
             $projectDir: '%kernel.project_dir%'

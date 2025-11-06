@@ -9,6 +9,8 @@ use App\Modules\Common\Csv\Exception\WrongRowFormatException;
 use App\Modules\RequestButcher\Dto\BasicDto;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Helper\ProgressBar;
+use Symfony\Component\Console\Helper\QuestionHelper;
+use Symfony\Component\Console\Question\ChoiceQuestion;
 use Symfony\Component\Console\Question\Question;
 use Symfony\Component\Filesystem\Exception\FileNotFoundException;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -17,6 +19,8 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\Finder\Finder;
+use Symfony\Component\Finder\SplFileInfo;
 
 #[AsCommand(
     name: 'rb:import',
@@ -25,6 +29,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 class ImportCommand extends Command
 {
     public function __construct(
+        private readonly string $projectDir,
         private readonly CsvReaderInterface $requestButchCsvReader,
         private readonly EntityManagerInterface $entityManager,
         private readonly SessionFactory $sessionFactory,
@@ -34,20 +39,18 @@ class ImportCommand extends Command
         parent::__construct();
     }
 
-    protected function configure(): void
-    {
-        $this
-            ->addArgument('csv', InputArgument::REQUIRED, 'Путь до CSV файла');
-    }
-
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
-        $pathToCsv = $input->getArgument('csv');
+
+        $helper = new QuestionHelper();
+        $question = new ChoiceQuestion('Выберите csv-файл для импорта', $this->getFiles());
+        $question->setErrorMessage('Файл %s не существует.');
+        $pathToCsv = $this->projectDir . '/var/butcher/' . $helper->ask($input, $output, $question);
 
         try {
             // Пробуем получить строки
-            $rows = $this->requestButchCsvReader->read('var/butcher/' . $pathToCsv);
+            $rows = $this->requestButchCsvReader->read($pathToCsv);
         } catch (WrongRowFormatException|FileNotFoundException $e) {
             $io->error($e->getMessage());
 
@@ -102,5 +105,22 @@ class ImportCommand extends Command
         $io->success('Импорт завершен');
 
         return Command::SUCCESS;
+    }
+
+    private function getFiles(): array
+    {
+        $results = (new Finder())
+            ->files()
+            ->in($this->projectDir . '/var/butcher/')
+            ->filter(fn ($file) => $file->getExtension() === 'csv');
+
+        $files = [];
+
+        /** @var SplFileInfo $file */
+        foreach ($results as $file) {
+            $files[] = $file->getRelativePathname();
+        }
+
+        return $files;
     }
 }

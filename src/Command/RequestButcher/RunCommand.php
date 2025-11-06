@@ -3,6 +3,7 @@
 namespace App\Command\RequestButcher;
 
 use App\Entity\RequestButcher\Task;
+use App\Modules\Common\Widgets\ConsoleSessionIdChooser;
 use App\Modules\RequestButcher\Metrics\RunWithTimerCollector;
 use App\Repository\RequestButcher\TaskRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -15,7 +16,6 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Question\Question;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
@@ -32,7 +32,8 @@ class RunCommand extends Command
         private readonly TaskRepository $repository,
         private readonly EntityManagerInterface $entityManager,
         private readonly Client $client,
-        private readonly RunWithTimerCollector $collector
+        private readonly RunWithTimerCollector $collector,
+        private readonly ConsoleSessionIdChooser $sessionIdChooser
     ) {
         parent::__construct();
     }
@@ -40,16 +41,16 @@ class RunCommand extends Command
     protected function configure(): void
     {
         $this
-            ->addArgument('sessionId', InputArgument::REQUIRED, 'Идентификатор сессии')
             ->addOption('threads', 't', InputOption::VALUE_OPTIONAL, 'Количество потоков', 1);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
-        $sessionId = $input->getArgument('sessionId');
+        $this->sessionIdChooser->init($input, $output);
         $threads = $input->getOption('threads');
 
+        $sessionId = $this->sessionIdChooser->ask();
         $tasks = $this->repository->findNewBySessionId($sessionId);
         $steps = ceil(count($tasks) / $threads);
 
