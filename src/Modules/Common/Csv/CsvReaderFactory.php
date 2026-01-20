@@ -15,6 +15,6 @@ class CsvReaderFactory
      */
     public function createFromPath(string $path, string $open_mode = 'r', $context = null): Reader
     {
-        return Reader::createFromPath($path, $open_mode, $context);
+        return Reader::from($path, $open_mode, $context);
     }
 }
