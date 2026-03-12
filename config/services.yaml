@@ -40,6 +40,10 @@ services:
         arguments:
             $projectDir: '%kernel.project_dir%'
 
+    App\Command\Parse\FindVariablesCommand:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+
     csv.stringReader:
         class: App\Modules\Common\Csv\StringCsvReader
     csv.nameUrlReader:
