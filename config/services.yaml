@@ -44,6 +44,10 @@ services:
         arguments:
             $projectDir: '%kernel.project_dir%'
 
+    App\Modules\Common\Files\FilesFinder:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+
     csv.stringReader:
         class: App\Modules\Common\Csv\StringCsvReader
     csv.nameUrlReader:

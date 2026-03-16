@@ -70,6 +70,7 @@ class DownloadCommand extends Command
         $helper = new QuestionHelper();
         $question = new ChoiceQuestion('Выберите csv-файл для загрузки', $this->getFiles());
         $question->setErrorMessage('Файл %s не существует.');
+        // TODO Replace to FilesFinder
         $pathToCsv = $this->projectDir . '/var/files/' . $helper->ask($input, $output, $question);
 
         try {
@@ -146,6 +147,9 @@ class DownloadCommand extends Command
         return Command::SUCCESS;
     }
 
+    /**
+     * @deprecated Replace to FilesFinder
+     */
     private function getFiles(): array
     {
         $results = (new Finder())

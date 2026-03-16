@@ -33,6 +33,7 @@ class FindVariablesCommand extends Command
         $helper = new QuestionHelper();
         $question = new ChoiceQuestion('Выберите файл для анализа', $this->getFiles());
         $question->setErrorMessage('Файл %s не существует.');
+        // TODO Replace to FilesFinder
         $filePath = $this->projectDir . '/var/parse/' . $helper->ask($input, $output, $question);
 
         $content = $this->filesystem->readFile($filePath);
@@ -50,6 +51,9 @@ class FindVariablesCommand extends Command
         return Command::SUCCESS;
     }
 
+    /**
+     * @deprecated Replace to FilesFinder
+     */
     private function getFiles(): array
     {
         $results = (new Finder())

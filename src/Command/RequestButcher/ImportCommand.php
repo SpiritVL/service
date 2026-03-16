@@ -15,7 +15,6 @@ use Symfony\Component\Console\Question\Question;
 use Symfony\Component\Filesystem\Exception\FileNotFoundException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
@@ -46,6 +45,7 @@ class ImportCommand extends Command
         $helper = new QuestionHelper();
         $question = new ChoiceQuestion('Выберите csv-файл для импорта', $this->getFiles());
         $question->setErrorMessage('Файл %s не существует.');
+        // TODO Replace to FilesFinder
         $pathToCsv = $this->projectDir . '/var/butcher/' . $helper->ask($input, $output, $question);
 
         try {
@@ -107,6 +107,9 @@ class ImportCommand extends Command
         return Command::SUCCESS;
     }
 
+    /**
+     * @deprecated Replace to FilesFinder
+     */
     private function getFiles(): array
     {
         $results = (new Finder())
