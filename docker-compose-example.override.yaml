@@ -1,0 +1,20 @@
+services:
+    application:
+        ports:
+        - "10000:80"
+
+    postgres:
+        ports:
+        - "10001:5432"
+
+    rabbitmq:
+        ports:
+        - "10002:15672"
+
+    grafana:
+        ports:
+        - "10003:3000"
+
+    prometheus:
+        ports:
+        - "10004:9090"

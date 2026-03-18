@@ -1,6 +1,7 @@
 services:
     application:
         image: 'webdevops/nginx'
+#       ports: Переопределяется в docker-compose.override.yaml
         working_dir: /app
         environment:
             WEB_DOCUMENT_ROOT: /app/public
@@ -8,8 +9,6 @@ services:
             WEB_PHP_SOCKET: php-fpm:9000
         volumes:
         - ./:/app
-        ports:
-        - '${DOCKER_WEB_PORT:-10000}:80'
 
     php-fpm:
         image: 'webdevops/php-dev:8.4-alpine'
@@ -36,6 +35,7 @@ services:
 
     postgres:
         image: postgres:17.6-alpine
+#       ports: Переопределяется в docker-compose.override.yaml
         environment:
             POSTGRES_USER: service
             POSTGRES_PASSWORD: password
@@ -43,8 +43,6 @@ services:
             PGDATA: /data/postgres
         volumes:
         - postgres_17_data:/data/postgres
-        ports:
-        - "${DOCKER_POSTGRES_PORT:-10001}:5432"
 
     redis:
         image: redis:alpine
@@ -53,15 +51,13 @@ services:
 
     rabbitmq:
         image: rabbitmq:3.13.7-management-alpine
-        ports:
-        - "${DOCKER_RABBITMQ_PORT:-10002}:15672"
+#       ports: Переопределяется в docker-compose.override.yaml
         volumes:
         - rabbitmq_data:/var/lib/rabbitmq
 
     grafana:
         image: grafana/grafana:latest
-        ports:
-        - "${DOCKER_RABBITMQ_PORT:-10003}:3000"
+#       ports: Переопределяется в docker-compose.override.yaml
         volumes:
         - grafana_data:/var/lib/grafana
         environment:
@@ -71,8 +67,7 @@ services:
 
     prometheus:
         image: prom/prometheus
-        ports:
-        - "${DOCKER_PROMETHEUS_PORT:-10004}:9090"
+#       ports: Переопределяется в docker-compose.override.yaml
         volumes:
         - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
         - prometheus_data:/prometheus
