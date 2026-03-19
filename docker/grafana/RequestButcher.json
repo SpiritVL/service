@@ -628,7 +628,7 @@
                     },
                     "editorMode": "code",
                     "exemplar": false,
-                    "expr": "rate(service_rb_count{sessionId=\"$session\"}[1m])",
+                    "expr": "rate(service_rb_count{sessionId=\"$session\"}[15m])",
                     "format": "table",
                     "instant": true,
                     "legendFormat": "__auto",
@@ -782,7 +782,7 @@
                     },
                     "disableTextWrap": false,
                     "editorMode": "code",
-                    "expr": "increase(service_rb_count{sessionId=\"$session\"}[1m])",
+                    "expr": "increase(service_rb_count{sessionId=\"$session\"}[5m]) / 5",
                     "fullMetaSearch": false,
                     "includeNullMetadata": true,
                     "instant": false,
@@ -800,7 +800,7 @@
                 "type": "prometheus",
                 "uid": "cfg6zsv7vtypsc"
             },
-            "description": "Обработано за 1 минуту",
+            "description": "Среднее время обработки одной записи за последние 5 минут",
             "fieldConfig": {
                 "defaults": {
                     "color": {
@@ -924,7 +924,7 @@
                     "disableTextWrap": false,
                     "editorMode": "code",
                     "exemplar": false,
-                    "expr": "(rate(service_rb_sum{sessionId=~\"$session\"}[5m])) / rate(service_rb_count{sessionId=~\"$session\"}[5m])",
+                    "expr": "rate(service_rb_sum{sessionId=~\"$session\"}[5m]) / rate(service_rb_count{sessionId=~\"$session\"}[5m])",
                     "format": "time_series",
                     "fullMetaSearch": false,
                     "includeNullMetadata": true,
@@ -971,6 +971,6 @@
     "timezone": "browser",
     "title": "Request butcher",
     "uid": "dd09ae4e-3f2f-4195-b467-92d41d16bbee",
-    "version": 2,
+    "version": 3,
     "weekStart": ""
 }
