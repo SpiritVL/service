@@ -4,6 +4,7 @@ namespace App\Repository\RequestButcher;
 
 use App\Entity\RequestButcher\Task;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\Query\ResultSetMappingBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -27,6 +28,30 @@ class TaskRepository extends ServiceEntityRepository
             ],
             'status' => 'new'
         ]);
+    }
+
+    /**
+     * @return Task[]
+     */
+    public function findNewChunkBySessionId(int $sessionId, int $size): array
+    {
+        $rsm = new ResultSetMappingBuilder($this->getEntityManager());
+        $rsm->addRootEntityFromClassMetadata(Task::class, 't');
+
+        $sql = '
+            SELECT DISTINCT ON (t.identifier) ' . $rsm->generateSelectClause() . '
+            FROM request_butcher_task t
+            WHERE t.session_id = :sessionId
+            AND t.status = :status
+            LIMIT :limit
+        ';
+
+        return $this->getEntityManager()
+                    ->createNativeQuery($sql, $rsm)
+                    ->setParameter('sessionId', $sessionId)
+                    ->setParameter('status', 'new')
+                    ->setParameter('limit', $size)
+                    ->getResult();
     }
 
     public function resetStatus(?string $sessionId = null): int

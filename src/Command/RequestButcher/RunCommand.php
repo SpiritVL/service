@@ -2,7 +2,6 @@
 
 namespace App\Command\RequestButcher;
 
-use App\Entity\RequestButcher\Task;
 use App\Modules\Common\Widgets\ConsoleSessionIdChooser;
 use App\Modules\RequestButcher\Metrics\RunWithTimerCollector;
 use App\Repository\RequestButcher\TaskRepository;
@@ -11,7 +10,7 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Cookie\CookieJar;
 use GuzzleHttp\Promise\Utils;
 use GuzzleHttp\Psr7\Response;
-use Symfony\Component\Console\Helper\ProgressBar;
+use Symfony\Component\Console\Helper\ProgressIndicator;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Question\Question;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -51,25 +50,26 @@ class RunCommand extends Command
         $threads = $input->getOption('threads');
 
         $sessionId = $this->sessionIdChooser->ask();
-        $tasks = $this->repository->findNewBySessionId($sessionId);
-        $steps = ceil(count($tasks) / $threads);
 
         $io->title(sprintf("Запуск обработки сессии № %d\nКол-во потоков: %d", $sessionId, $threads));
-        $question = new Question(sprintf('Запустить обработку [%d] шагов? [y/n]', $steps), 'y');
+        $question = new Question('Запустить обработку? [y/n]', 'y');
 
         if ($io->askQuestion($question) !== 'y') {
             return Command::SUCCESS;
         }
 
-        $progressBar = new ProgressBar($output, $steps);
-        $progressBar->setFormat('very_verbose');
-        $progressBar->start();
+        $progressIndicator = new ProgressIndicator($output, 'very_verbose', 1);
+        $progressIndicator->start('Обработка ...');
         $success = 0;
 
-        foreach (array_chunk($tasks, $threads) as $chunk) {
+        while (true) {
+            $chunk = $this->repository->findNewChunkBySessionId($sessionId, $threads);
+            if (empty($chunk)) {
+                break;
+            }
+
             $promises = [];
 
-            /** @var Task $task */
             foreach ($chunk as $task) {
                 $this->collector->start((string) $task->getId());
                 $task->setStatus('pending');
@@ -118,16 +118,16 @@ class RunCommand extends Command
             Utils::settle($promises)->wait();
 
             $this->entityManager->flush();
-            $progressBar->advance();
+            $this->entityManager->clear();
+            $progressIndicator->advance();
         }
 
-        $progressBar->finish();
+        $progressIndicator->finish('Обработка завершена');
         $this->entityManager->flush();
 
         // Уведомление об успехе
         $io->newLine(2);
-        $io->writeln(sprintf('Успешно обработано %d/%d шагов', $success, count($tasks)));
-        $io->success('Обработка завершена');
+        $io->writeln(sprintf('Успешно обработано %d файлов', $success));
 
         return Command::SUCCESS;
     }
