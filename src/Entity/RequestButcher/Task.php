@@ -82,13 +82,16 @@ class Task
 
     public function getRequestBody(): array
     {
-        return [
+        // Общий запрос для всех типов документов
+        $body = [
             'loanId' => $this->params['id'],
             'format' => 'pdf',
             'type' => $this->params['type'],
-            'params[prolongation]' => $this->params['prolongation'] ?? '',
-            'params[version]' => $this->params['version'],
+            'params[prolongation]' => $this->params['prolongation'] ?? ''
         ];
+
+        // Добавляем одну (кроме пролонгаций) или несколько версий (для пролонгаций)
+        return $this->addVersions($body);
     }
 
     public function setParams(array $params): static
@@ -108,5 +111,27 @@ class Task
         $this->lastError = $lastError;
 
         return $this;
+    }
+
+    /**
+     * @TODO переделать на парсер и DTO
+     */
+    private function addVersions(array $body): array
+    {
+        // Если указана только версия - добавляем ее
+        if (isset($this->params['version'])) {
+            $body['params[version]'] = $this->params['version'];
+
+            return $body;
+        }
+
+        // Если версия не указана, это пролонгации, добавляем версии всех документов
+        return array_merge($body, [
+            'params[version]' => 0,
+            'params[versions][prolongation_agreements]' => $this->params['prolongation_agreements'],
+            'params[versions][insurance_card]' => $this->params['insurance_card'],
+            'params[versions][insurance_card_request]' => $this->params['insurance_card_request'],
+            'params[versions][notification_connected_services]' => $this->params['notification_connected_services'],
+        ]);
     }
 }
