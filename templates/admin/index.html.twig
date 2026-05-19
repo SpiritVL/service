@@ -1,0 +1,74 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Admin{% endblock %}
+
+{% block body %}
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="mt-3">Панель администратора</h1>
+                <hr>
+            </div>
+
+            <div class="col-12">
+                <table class="table mb-5">
+                    <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Title</th>
+                        <th class="text-center" scope="col">PID</th>
+                        <th class="text-center" scope="col">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for session in sessions %}
+                        <tr>
+                            <th scope="row">{{ session.id }}</th>
+                            <td>{{ session.title }}</td>
+                            <td class="{% if session.isAlive() %}table-success{% else %}table-danger{% endif %} text-center">
+                                {{ session.pid | default('null') }}
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group" role="group">
+                                    <a href="{{ path('sessions_run', {'sessionId': session.id, 'threads': '6'}) }}"
+                                       class="btn btn-success btn-sm">Run</a>
+
+                                    {% if (session.pid) %}
+                                        <a href="{{ path('sessions_stop', {'pid': session.pid}) }}"
+                                           class="btn btn-danger btn-sm">Kill</a>
+                                    {% endif %}
+
+                                    <a href="{{ path('sessions_reset', {'sessionId': session.id}) }}"
+                                       class="btn btn-warning btn-sm">Reset</a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% for process in processes %}
+                <div class="col-2 mb-3">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="row">
+                                <div class="col-6 mt-1">#{{ process.pid }}</div>
+                                <div class="col-6 text-end">
+                                    <a href="{{ path('sessions_stop', {'pid': process.pid}) }}"
+                                       class="btn btn-danger btn-sm">Kill</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">
+                                Процесс для сессии <strong>{{ process.sessionId }}</strong>,
+                                потоков <strong>{{ process.threads }}</strong>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}

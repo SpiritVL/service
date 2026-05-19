@@ -28,7 +28,7 @@ class ResetCommand extends Command
         $io = new SymfonyStyle($input, $output);
         $this->chooser->init($input, $output);
 
-        $sessionId = $this->chooser->ask(true);
+        $sessionId = $this->chooser->ask();
 
         $affectedRows = $this->taskRepository->resetStatus($sessionId);
 

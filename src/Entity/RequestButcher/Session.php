@@ -32,6 +32,9 @@ class Session
     #[ORM\Column]
     private array $params = [];
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $pid = null;
+
     /**
      * @var Collection<int, Task>
      */
@@ -124,5 +127,22 @@ class Session
         }
 
         return $this;
+    }
+
+    public function getPid(): ?string
+    {
+        return $this->pid;
+    }
+
+    public function setPid(?string $pid): static
+    {
+        $this->pid = $pid;
+
+        return $this;
+    }
+
+    public function isAlive(): bool
+    {
+        return file_exists("/proc/$this->pid");
     }
 }

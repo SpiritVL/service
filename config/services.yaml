@@ -36,6 +36,11 @@ services:
             $url: '%rb.url%'
             $session: '%rb.session%'
 
+    App\Command\RequestButcher\RunBackgroundCommand:
+        arguments:
+            $url: '%rb.url%'
+            $session: '%rb.session%'
+
     App\Command\Files\DownloadCommand:
         arguments:
             $projectDir: '%kernel.project_dir%'
