@@ -117,7 +117,7 @@ final class AdminController extends AbstractController
         exec("pgrep -af 'rb:run'", $output);
 
         foreach ($output as $line) {
-            if (preg_match('/^(\d+)\s+.+?-s=(\d+)\s+-t=(\d+)/', $line, $matches)) {
+            if (preg_match('/^(\d+)\s+.+?-s\s+(\d+)\s+-t\s+(\d+)/', $line, $matches)) {
                 $pid = (int) $matches[1];
                 $sessionId = (int) $matches[2];
                 $threads = (int) $matches[3];
