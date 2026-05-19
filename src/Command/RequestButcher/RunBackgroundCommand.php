@@ -37,8 +37,8 @@ class RunBackgroundCommand extends Command
     protected function configure(): void
     {
         $this
-            ->addOption('session', 't', InputOption::VALUE_OPTIONAL, 'ID сессии', 0)
-            ->addOption('threads', 's', InputOption::VALUE_OPTIONAL, 'Количество потоков', 1);
+            ->addOption('session', 's', InputOption::VALUE_OPTIONAL, 'ID сессии', 0)
+            ->addOption('threads', 't', InputOption::VALUE_OPTIONAL, 'Количество потоков', 1);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int

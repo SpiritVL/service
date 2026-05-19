@@ -37,7 +37,7 @@ final class AdminController extends AbstractController
 
         // Формируем команду с nohup и & — процесс живёт сам по себе
         $command = sprintf(
-            'nohup php /app/bin/console rb:run-background -s=%d -t=%d > /app/var/log/session_%d.log 2>&1 & echo $!',
+            'nohup php /app/bin/console rb:run-background -s %d -t %d > /app/var/log/session_%d.log 2>&1 & echo $!',
             $sessionId,
             $threads,
             $sessionId,
