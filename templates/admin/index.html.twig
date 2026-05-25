@@ -10,6 +10,13 @@
                 <hr>
             </div>
 
+            <div class="col-4">
+                <div class="mb-5">
+                    <label for="threads" class="form-label">Количество потоков</label>
+                    <input type="number" class="form-control" id="threads" name="threads" value="6">
+                </div>
+            </div>
+
             <div class="col-12">
                 <table class="table mb-5">
                     <thead>
@@ -30,8 +37,8 @@
                             </td>
                             <td class="text-center">
                                 <div class="btn-group" role="group">
-                                    <a href="{{ path('sessions_run', {'sessionId': session.id, 'threads': '6'}) }}"
-                                       class="btn btn-success btn-sm">Run</a>
+                                    <a href="{{ path('sessions_run', {'sessionId': session.id, 'threads': "6"}) }}"
+                                       class="btn btn-success btn-sm run-link">Run</a>
 
                                     {% if (session.pid) %}
                                         <a href="{{ path('sessions_stop', {'pid': session.pid}) }}"
@@ -71,4 +78,25 @@
             {% endfor %}
         </div>
     </div>
+{% endblock %}
+
+{% block script %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const threadsInput = document.getElementById('threads');
+            const runLinks = document.querySelectorAll('.run-link');
+
+            function updateRunLinks() {
+                const newThreads = threadsInput.value;
+                runLinks.forEach(link => {
+                    const url = new URL(link.href);
+                    url.searchParams.set('threads', newThreads);
+                    link.href = url.toString();
+                });
+            }
+
+            threadsInput.addEventListener('input', updateRunLinks);
+            threadsInput.addEventListener('change', updateRunLinks);
+        });
+    </script>
 {% endblock %}
