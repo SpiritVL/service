@@ -23,7 +23,7 @@ final class AdminController extends AbstractController
     public function index(): Response
     {
         return $this->render('admin/index.html.twig', [
-            'sessions' => $this->sessionRepository->findAll(),
+            'sessions' => $this->sessionRepository->findBy([], ['id' => 'ASC']),
             'processes' => $this->listProcesses(),
         ]);
     }
