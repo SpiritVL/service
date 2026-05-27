@@ -10,6 +10,7 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Cookie\CookieJar;
 use GuzzleHttp\Promise\Utils;
 use GuzzleHttp\Psr7\Response;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -30,6 +31,7 @@ class RunBackgroundCommand extends Command
         private readonly Client $client,
         private readonly RunWithTimerCollector $collector,
         private readonly SessionRepository $sessionRepository,
+        private readonly LoggerInterface $logger,
     ) {
         parent::__construct();
     }
@@ -88,12 +90,17 @@ class RunBackgroundCommand extends Command
                             $task->setStatus('error');
                             $task->setLastError('Wrong response');
                             $this->collector->incDone($task->getSession(), $task, false);
+
+                            $this->logger->error($throwable->getMessage(), [
+                                'status' => $response->getStatusCode(),
+                                'body' => $response->getBody()->getContents(),
+                            ]);
                         }
                     },
-                    function (\Throwable $e) use ($task) {
+                    function (\Throwable $throwable) use ($task) {
                         $this->collector->stop((string) $task->getId());
                         $task->setStatus('error');
-                        $task->setLastError($e->getMessage());
+                        $task->setLastError($throwable->getMessage());
                         $this->collector->incDone($task->getSession(), $task, false);
                     }
                 );
