@@ -5,6 +5,8 @@ namespace App\Controller;
 use App\Repository\RequestButcher\SessionRepository;
 use App\Repository\RequestButcher\TaskRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Cache\CacheItemPoolInterface;
+use Psr\Cache\InvalidArgumentException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
@@ -16,6 +18,7 @@ final class AdminController extends AbstractController
         private readonly SessionRepository $sessionRepository,
         private readonly EntityManagerInterface $entityManager,
         private readonly TaskRepository $taskRepository,
+        private readonly CacheItemPoolInterface $cache,
     ) {
     }
 
@@ -107,6 +110,20 @@ final class AdminController extends AbstractController
     {
         $affectedRaws = $this->taskRepository->resetStatus($sessionId);
         $this->addFlash('success', "Сессия успешно сброшена. Затронуто: {$affectedRaws}");
+
+        return $this->redirect($this->generateUrl('sessions'));
+    }
+
+    #[Route('/rb/change-session-id', name: 'change_session_id')]
+    public function changeSessionId(#[MapQueryParameter] string $sessionId): Response
+    {
+        try {
+            $sessionIdItem = $this->cache->getItem('session_id');
+            $sessionIdItem->set($sessionId);
+            $this->addFlash('success', "Новый ключ сессии был задан.");
+        } catch (InvalidArgumentException $e) {
+            $this->addFlash('danger', $e->getMessage());
+        }
 
         return $this->redirect($this->generateUrl('sessions'));
     }

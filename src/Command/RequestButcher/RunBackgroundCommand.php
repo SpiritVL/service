@@ -10,12 +10,14 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Cookie\CookieJar;
 use GuzzleHttp\Promise\Utils;
 use GuzzleHttp\Psr7\Response;
+use Psr\Cache\InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Contracts\Cache\CacheInterface;
 
 #[AsCommand(
     name: 'rb:run-background',
@@ -25,14 +27,24 @@ class RunBackgroundCommand extends Command
 {
     public function __construct(
         private readonly string $url,
-        private readonly string $session,
+        private string $session,
         private readonly TaskRepository $repository,
         private readonly EntityManagerInterface $entityManager,
         private readonly Client $client,
         private readonly RunWithTimerCollector $collector,
         private readonly SessionRepository $sessionRepository,
         private readonly LoggerInterface $logger,
+        private readonly CacheInterface $cache,
     ) {
+        try {
+            // Если в кеше нет session_id, берем из конфига
+            $this->session = $this->cache->get('session_id', function () {
+                return $this->session;
+            });
+        } catch (InvalidArgumentException $e) {
+            $this->logger->error($e->getMessage());
+        }
+
         parent::__construct();
     }
 

@@ -53,7 +53,7 @@ class DownloadCommand extends Command
 
             foreach ($prodVersions as $type => $data) {
                 if (!isset($stageVersions[$type])) {
-                    $io->error(sprintf('Template `%s` does not exist', $type));
+                    $io->error(sprintf('Stage version `%s` does not exist', $type));
                     continue;
                 }
 
@@ -90,7 +90,7 @@ class DownloadCommand extends Command
 
     private function getVersions(string $prefix): array
     {
-        // Получаем шаблоны со стейджа
+        // Получаем шаблоны
         $templates = $this->runSelect('
             SELECT id, string_id
             FROM template
@@ -99,7 +99,7 @@ class DownloadCommand extends Command
         // Приводим массив к виду [ id => string_id ]
         $templateIds = array_column($templates, 'string_id', 'id');
 
-        // Получаем последние версии с прода
+        // Получаем последние версии
         $versionsData = $this->runSelect('
             SELECT t1.*
             FROM template_version t1
